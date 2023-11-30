@@ -1,14 +1,15 @@
 local M = {}
 
 local ts_utils = require("nvim-treesitter.ts_utils")
-local ts_locals = require("nvim-treesitter.locals")
-local ts_indent = require("nvim-treesitter.indent")
 
 local function find_const_node()
 	local node = ts_utils.get_node_at_cursor()
+	local search_path = node:type()
 	while node:type() ~= 'const_object_expression' and node:type() ~= 'program' do
 		node = node:parent()
+		search_path = search_path .. ' -> ' .. node:type()
 	end
+	print(search_path)
 	return node:child(0)
 end
 
@@ -24,7 +25,9 @@ end
 local function callback(args)
 	local errors = vim.diagnostic.get(args.buf, { severity = vim.diagnostic.severity.ERROR })
 	for _, err in ipairs(errors) do
-		if err.code == 'const_with_non_const' then
+		print(err.code)
+		if err.code == 'const_with_non_const' or
+				err.code == 'const_eval_method_invocation' then
 			remove_const(err)
 		end
 	end
